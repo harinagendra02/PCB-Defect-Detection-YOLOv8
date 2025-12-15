@@ -1,55 +1,69 @@
-# PCB-Defect-Detection-YOLOv8
-AI-powered PCB defect detection using YOLOv8 with Streamlit UI
+🟩 PCB Defect Detection using YOLOv8
 
+AI-powered Printed Circuit Board (PCB) defect detection system built using a custom-trained YOLOv8-m deep learning model and an interactive Streamlit web application.
+The system enables automated inspection, intelligent defect analysis, visual reporting, and downloadable results — designed for industry-grade quality control workflows.
 
+📌 Project Overview
 
-   🟩 YOLOv8 PCB Defect Detection System
+Manual PCB inspection is time-consuming, error-prone, and costly.
+This project automates PCB defect detection using computer vision and deep learning, providing:
 
-A deep-learning powered application for automated PCB defect detection with a full-featured Streamlit interface, intelligent defect analysis, downloadable reports, and real-time visualization.
+High-accuracy defect localization
 
-📌 Overview
+Severity-based defect classification
 
-This project uses a custom-trained YOLOv8-m model to detect six major PCB defects:
-*Missing Hole
+Professional UI with real-time visualization
 
-*Mouse Bite
+Detailed analytical reports for decision-making
 
-*Short
+The application is optimized with a neon-themed UI for clarity, usability, and modern presentation.
 
-*Open Circuit
+🧠 Defect Classes Detected
 
-*Spur
+The model is trained to detect six critical PCB defects:
 
-*Spurious Copper
+Missing Hole
 
-The system provides high-accuracy defect detection, generates a detailed analytical report, and offers a smooth UI optimized with a neon theme for better readability and user experience.
+Mouse Bite
+
+Short Circuit
+
+Open Circuit
+
+Spur
+
+Spurious Copper
 
 ✨ Key Features
-🔍 1. YOLOv8 Real-Time Defect Detection
+🔍 1. Real-Time YOLOv8 Detection
+
+Custom-trained YOLOv8-m model
 
 Fast and accurate inference
 
-Supports multiple image uploads
+Supports single and multiple image uploads
 
 High-quality bounding box visualization
 
-Severity classification (Low / Medium / High)
+Automatic severity classification (Low / Medium / High)
 
 📊 2. Intelligent Summary Table
 
-Shows defect counts per image
+Displays uploaded image list
 
-Shows per-class defect distribution
+Shows defect count per image
 
-Clickable “View” button displays full detailed report
+Shows class-wise defect distribution
+
+One-click “View” button for detailed inspection
 
 🧾 3. Detailed Image Report
 
-Each image report contains:
+For each PCB image, the system provides:
 
-Original Image
+Original input image
 
-Prediction Image
+Predicted output image with bounding boxes
 
 Dynamic defect table
 
@@ -57,30 +71,48 @@ Per-defect neon UI blocks
 
 Severity badges
 
-Bounding box details (Location, Size, Center)
+Bounding box metadata:
 
-📈 4. Defect Graphs
+Location
 
-Auto-generated bar graph for defect count
+Size
 
-Clean dark-mode theme
+Center coordinates
 
-Supports all classes in dataset
+📈 4. Defect Graph Visualization
+
+Auto-generated bar graph of defect counts
+
+Dark-mode, neon-styled theme
+
+Supports all defect classes
+
+Helps in quick defect trend analysis
 
 🔎 5. Smart Search System
 
-Search by:
+Search images using:
 
-Partial filename
+Partial image name
 
 Partial defect name
 
 Example:
-Typing "mis" shows all missing hole images.
+Typing mis displays all images containing Missing Hole defects.
 
-📥 6. ZIP Export System
+📋 6. Image List Panel
 
-Exports:
+Dedicated “List” button
+
+Displays clean list of uploaded images
+
+Clicking an image name opens its full detailed report
+
+Improves navigation for large datasets
+
+📥 7. ZIP Export & Reporting System
+
+Download results in a single ZIP file containing:
 
 Original images
 
@@ -90,40 +122,37 @@ Text defect summary
 
 Auto-generated PDF report
 
-Available for:
+Download options:
 
-Search results only
+Search-filtered results
 
 Entire dataset
 
-📋 7. Image List Feature
-
-“List” button shows a clean list of uploaded images
-
-Clicking an image instantly opens its detailed report
-
 ⬆️ 8. Floating Scroll-to-Top Button
 
-Easy navigation for long result pages.
+Smooth navigation for long result pages
 
-🏗 Model Information
+Improves usability in multi-image analysis
+
+🏗️ Model & Training Details
 
 Model: YOLOv8-m
 
 Epochs: 80
 
-Batch size: 16
+Batch Size: 16
 
 Optimizer: AdamW
 
-Image size: 640
+Image Size: 640 × 640
 
-Device used: NVIDIA RTX 3050
+Hardware: NVIDIA RTX 3050 (CUDA enabled)
+
+The model demonstrates strong generalization across all defect classes.
 
 📁 Repository Structure
-PCB-Defect-Inspector/
+PCB-Defect-Detection-YOLOv8/
 │
-
 ├── app.py
 
 ├── best.pt
@@ -133,57 +162,65 @@ PCB-Defect-Inspector/
 ├── README.md
 
 │
-
 ├── sample_inputs/
-
-│    ├── sample1.jpg
-│    └── sample2.jpg
-
+│   ├── sample1.jpg
+│   └── sample2.jpg
 │
-└── docs/
-     └── PCB_Report.pdf
 
-⚙️ How to Run the Application
+├── outputs/
+│   ├── prediction_images/
+│   └── defect_graphs/
+│
+
+
+⚙️ Installation & Execution
 1️⃣ Install Dependencies
 pip install -r requirements.txt
 
-2️⃣ Run Streamlit App
+2️⃣ Run the Application
 streamlit run app.py
 
-3️⃣ Upload Images
+3️⃣ Upload PCB Images
 
-You can upload one or multiple PCB images.
+Upload one or multiple PCB images through the UI.
 
-🖼 Sample Output
+🖼 Sample Results
 
-(Add screenshots here)
+(Add screenshots in the folders below and link them here)
 
-📸 Original Image  
-📸 Prediction Image  
-📈 Defect Graph  
-📝 PDF Report  
+Original PCB Image
+
+Prediction Output with Bounding Boxes
+
+Defect Count Graph
+
+Auto-Generated PDF Report
 
 🚀 Applications
 
-Industry-level PCB quality inspection
+Automated PCB quality inspection
 
-Automated manufacturing line monitoring
+Smart manufacturing lines
 
 Fault diagnosis systems
 
-Smart factories & Industry 4.0 solutions
+Industry 4.0 & smart factory solutions
 
-🔮 Future Improvements
+🔮 Future Enhancements
 
-Support for video PCB inspection
+Video-based PCB inspection
 
-Add bounding box editing tool
+Editable bounding boxes
 
 Cloud deployment (AWS / Streamlit Cloud)
 
-Real-time microcontroller integration
+Real-time hardware integration
 
 👨‍💻 Developed By
 
 Hari Nagendra
-CSE Student | AI Enthusias
+CSE Student | AI & Computer Vision Enthusiast
+
+⭐ Final Note
+
+This project demonstrates end-to-end AI system development — from model training and backend pipeline to a production-ready interactive application.

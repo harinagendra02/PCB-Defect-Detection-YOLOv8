@@ -174,13 +174,17 @@ PCB-Defect-Detection-YOLOv8/
 
 
 ⚙️ Installation & Execution
+
 1️⃣ Install Dependencies
+
 pip install -r requirements.txt
 
 2️⃣ Run the Application
+
 streamlit run app.py
 
 3️⃣ Upload PCB Images
+
 
 Upload one or multiple PCB images through the UI.
 

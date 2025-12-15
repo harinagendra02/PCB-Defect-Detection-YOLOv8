@@ -123,14 +123,22 @@ Device used: NVIDIA RTX 3050
 📁 Repository Structure
 PCB-Defect-Inspector/
 │
+
 ├── app.py
+
 ├── best.pt
+
 ├── requirements.txt
+
 ├── README.md
+
 │
+
 ├── sample_inputs/
+
 │    ├── sample1.jpg
 │    └── sample2.jpg
+
 │
 └── docs/
      └── PCB_Report.pdf

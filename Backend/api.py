@@ -32,3 +32,4 @@ async def predict(file: UploadFile = File(...)):
         })
 
     return {"boxes": boxes}
+

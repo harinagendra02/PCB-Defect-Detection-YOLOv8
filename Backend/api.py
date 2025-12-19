@@ -1,46 +1,34 @@
 from fastapi import FastAPI, File, UploadFile
-from fastapi.middleware.cors import CORSMiddleware
 from ultralytics import YOLO
 import cv2
 import numpy as np
-import tempfile
 
-app = FastAPI()
+app = FastAPI()   # 🔴 MUST be named `app`
 
-# Allow Streamlit / browser access
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+model = YOLO("best.pt")  # model loads once
 
-model = YOLO("best.pt")
+@app.get("/")
+def root():
+    return {"status": "PCB Defect API is running"}
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
-    contents = await file.read()
+    image_bytes = await file.read()
+    np_img = np.frombuffer(image_bytes, np.uint8)
+    img = cv2.imdecode(np_img, cv2.IMREAD_COLOR)
 
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
-        tmp.write(contents)
-        img_path = tmp.name
-
-    results = model(img_path)[0]
+    results = model(img)[0]
 
     boxes = []
     for box in results.boxes:
         x1, y1, x2, y2 = map(int, box.xyxy[0])
-        conf = float(box.conf[0])
-        cls = int(box.cls[0])
-
         boxes.append({
             "x1": x1,
             "y1": y1,
             "x2": x2,
             "y2": y2,
-            "confidence": conf,
-            "type": model.names[cls]
+            "confidence": float(box.conf[0]),
+            "type": model.names[int(box.cls[0])]
         })
 
     return {"boxes": boxes}
-

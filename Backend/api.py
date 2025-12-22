@@ -2,10 +2,14 @@ from fastapi import FastAPI, File, UploadFile
 from ultralytics import YOLO
 import cv2
 import numpy as np
+import torch
 
-app = FastAPI()   # 🔴 MUST be named `app`
+app = FastAPI()
 
-model = YOLO("best.pt")  # model loads once
+# Load model ONCE
+model = YOLO("best.pt")
+model.to("cpu")
+torch.set_num_threads(1)
 
 @app.get("/")
 def root():
@@ -21,15 +25,17 @@ async def predict(file: UploadFile = File(...)):
 
     boxes = []
     for box in results.boxes:
+        conf = float(box.conf[0])
+        if conf < 0.4:
+            continue
         x1, y1, x2, y2 = map(int, box.xyxy[0])
         boxes.append({
             "x1": x1,
             "y1": y1,
             "x2": x2,
             "y2": y2,
-            "confidence": float(box.conf[0]),
+            "confidence": conf,
             "type": model.names[int(box.cls[0])]
         })
 
     return {"boxes": boxes}
-

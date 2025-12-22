@@ -1,0 +1,9 @@
+Deployment failed during the initialization process
+
+View less
+
+Initialization › Snapshot code
+
+(00:07)
+
+config file {   "build": {     "rootDirectory": "Backend"   },   "deploy": {     "startCommand": "uvicorn api:app --host 0.0.0.0 --port $PORT"   } } does not exist

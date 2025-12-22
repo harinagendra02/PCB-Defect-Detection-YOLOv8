@@ -1,19 +1,16 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, UploadFile, File
 from ultralytics import YOLO
-import cv2
 import numpy as np
-import torch
+import cv2
 
-app = FastAPI()
+app = FastAPI(title="PCB Defect Detection API")
 
 # Load model ONCE
 model = YOLO("best.pt")
-model.to("cpu")
-torch.set_num_threads(1)
 
 @app.get("/")
 def root():
-    return {"status": "PCB Defect API is running"}
+    return {"message": "PCB Backend is running"}
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
@@ -23,19 +20,16 @@ async def predict(file: UploadFile = File(...)):
 
     results = model(img)[0]
 
-    boxes = []
+    detections = []
     for box in results.boxes:
-        conf = float(box.conf[0])
-        if conf < 0.4:
-            continue
         x1, y1, x2, y2 = map(int, box.xyxy[0])
-        boxes.append({
+        detections.append({
             "x1": x1,
             "y1": y1,
             "x2": x2,
             "y2": y2,
-            "confidence": conf,
-            "type": model.names[int(box.cls[0])]
+            "confidence": float(box.conf[0]),
+            "defect": model.names[int(box.cls[0])]
         })
 
-    return {"boxes": boxes}
+    return {"detections": detections}

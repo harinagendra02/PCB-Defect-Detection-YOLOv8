@@ -3,9 +3,44 @@ import streamlit as st
 from PIL import Image
 import pandas as pd
 import matplotlib.pyplot as plt
+import cv2
+import numpy as np
+import io
+def draw_boxes_on_image(pil_img, boxes):
+    img = np.array(pil_img)
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+
+    h, w, _ = img.shape
+    thickness = max(2, int(min(h, w) * 0.004))   # auto thickness
+    font_scale = max(0.6, min(h, w) * 0.0015)    # auto font size
+
+    for d in boxes:
+        x1, y1, x2, y2 = d["x1"], d["y1"], d["x2"], d["y2"]
+        conf = d["confidence"]
+        label = f"{d['type']} {conf:.2f}"
+
+        # 🔴 Bright red box (better visibility than green)
+        color = (0, 0, 255)
+
+        cv2.rectangle(img, (x1, y1), (x2, y2), color, thickness)
+
+        cv2.putText(
+            img,
+            label,
+            (x1, y1 - 8 if y1 > 30 else y1 + 25),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            font_scale,
+            color,
+            thickness
+        )
+
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    return Image.fromarray(img)
+
 
 # ---------------- PAGE CONFIG ----------------
 st.set_page_config(page_title="HARI PCB AI Inspector", page_icon="🟩", layout="wide")
+
 
 # ---------------- GLOBAL CSS (STRONG NEON FOR PER-DEFECT) ----------------
 st.markdown("""
@@ -47,7 +82,8 @@ st.markdown("""
     display: flex;
     gap: 12px;
     align-items: center;
-}
+} 
+            
 
 /* left accent bar */
 .neon-defect:after {
@@ -150,7 +186,8 @@ if "scroll_to" not in st.session_state:
     st.session_state["scroll_to"] = None
 if "search_value" not in st.session_state:
     st.session_state["search_value"] = ""
-
+# ---------------- SAFETY INIT ----------------
+btn = False   # ✅ STEP 2 (IMPORTANT)
 # ---------------- UPLOAD ----------------
 st.markdown('<a id="upload_section"></a>', unsafe_allow_html=True)
 uploaded_files = st.file_uploader("Upload PCB Images", type=["jpg","jpeg","png"], accept_multiple_files=True)
@@ -196,9 +233,11 @@ if uploaded_files:
 
         with st.spinner("Running inference..."):
             for f in uploaded_files:
+                image_bytes = f.getvalue()
+
 
                 api_url = "http://127.0.0.1:8000/predict"
-                files = {"file": (f.name, f.getvalue(), "image/jpeg")}
+                files = {"file": (f.name, image_bytes, "image/jpeg")}
 
                 response = requests.post(api_url, files=files)
                 if response.status_code != 200:
@@ -228,13 +267,16 @@ if uploaded_files:
 
                 type_counts = pd.Series([r["Type"] for r in rows]).value_counts().to_dict()
 
+                input_img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+                annotated_img = draw_boxes_on_image(input_img.copy(), data["boxes"])
+
                 st.session_state["pred_results"].append({
                     "name": f.name,
-                    "input_pil": Image.open(f).convert("RGB"),
-                    "result_pil": Image.open(f).convert("RGB"),
+                    "input_pil": input_img,
+                    "result_pil": annotated_img,
                     "defect_rows": rows,
-                    "type_counts": type_counts
-                })
+                  "type_counts": type_counts
+            })
 
         st.rerun()
 
@@ -242,12 +284,26 @@ if uploaded_files:
 
 # ---------------- SEARCH ----------------
 # ---------------- IMPROVED SMART SEARCH ----------------
+# ---------------- SEARCH (with icon button) ----------------
 if st.session_state["pred_results"]:
-    st.session_state["search_value"] = st.text_input(
-        "Search (partial name or defect, comma separated)",
-        placeholder="mis, hole, circ, 01_",
-        value=st.session_state["search_value"]
-    )
+    c1, c2 = st.columns([5, 1])
+
+    with c1:
+        search_text = st.text_input(
+            "Search defects or file name",
+            placeholder="mis, hole, circ, 01_",
+            value=st.session_state["search_value"],
+            label_visibility="collapsed"
+        )
+
+    with c2:
+        search_btn = st.button("🔍", width="stretch")
+
+
+    # Update search value when typing OR clicking icon
+    if search_text != st.session_state["search_value"] or search_btn:
+        st.session_state["search_value"] = search_text
+
 
 search_raw = st.session_state.get("search_value", "").strip().lower()
 results_to_show = st.session_state["pred_results"]  # default - all
@@ -289,38 +345,35 @@ if search_raw:
 if st.session_state["pred_results"]:
     st.markdown("### Summary Table")
 
-    for idx, r in enumerate(results_to_show):
-        c0, c1, c2, c3 = st.columns([1, 2, 2, 1])
+for r in results_to_show:
+    orig_idx = st.session_state["pred_results"].index(r)
 
-        # ----------- Image Preview ----------
-        with c0:
-            st.markdown('<div class="summary-img">', unsafe_allow_html=True)
-            st.image(r["result_pil"])
-            st.markdown('</div>', unsafe_allow_html=True)
+    c0, c1, c2, c3 = st.columns([1, 2, 2, 1])
 
-        # ----------- File Info ----------
-        with c1:
-            st.markdown(f"**{r['name']}**")
-            st.caption(f"{len(r['defect_rows'])} defects")
+    with c0:
+        st.markdown('<div class="summary-img">', unsafe_allow_html=True)
+        st.image(r["result_pil"])
+        st.markdown('</div>', unsafe_allow_html=True)
 
-        # ----------- Defect Buttons ----------
-        with c2:
-            for j, (t, v) in enumerate(r["type_counts"].items()):
-                if st.button(f"{t} ({v})", key=f"type_{idx}_{j}"):
-                    if idx not in st.session_state["open_panels"]:
-                        st.session_state["open_panels"].append(idx)
+    with c1:
+        st.markdown(f"**{r['name']}**")
+        st.caption(f"{len(r['defect_rows'])} defects")
 
-                    st.session_state["scroll_to"] = f"panel_{idx}"
-                    st.rerun()
-
-        # ----------- View Button (Only button now) ----------
-        with c3:
-            if st.button("View", key=f"view_{idx}"):
-                if idx not in st.session_state["open_panels"]:
-                    st.session_state["open_panels"].append(idx)
-
-                st.session_state["scroll_to"] = f"panel_{idx}"
+    with c2:
+        for j, (t, v) in enumerate(r["type_counts"].items()):
+            if st.button(f"{t} ({v})", key=f"type_{orig_idx}_{j}"):
+                if orig_idx not in st.session_state["open_panels"]:
+                    st.session_state["open_panels"].append(orig_idx)
+                st.session_state["scroll_to"] = f"panel_{orig_idx}"
                 st.rerun()
+
+    with c3:
+        if st.button("View", key=f"view_{orig_idx}"):
+            if orig_idx not in st.session_state["open_panels"]:
+                st.session_state["open_panels"].append(orig_idx)
+            st.session_state["scroll_to"] = f"panel_{orig_idx}"
+            st.rerun()
+
 # ---------------- DETAIL PANELS (NEON DEFECTS) ----------------
 for idx in st.session_state["open_panels"][:]:
     if idx >= len(st.session_state["pred_results"]): continue
@@ -340,7 +393,7 @@ for idx in st.session_state["open_panels"][:]:
         st.image(det["result_pil"])
         st.markdown('</div>', unsafe_allow_html=True)
     df = pd.DataFrame(det["defect_rows"])
-    st.dataframe(df, use_container_width=True)
+    st.dataframe(df, width="stretch")
     st.markdown("### Per-Defect Details")
     for row in df.to_dict("records"):
         sev_class = "badge-sev-low"
@@ -547,3 +600,4 @@ document.getElementById("fixedScrollUpButton").onclick = function() {
 
 # ---------------- FOOTER ----------------
 st.markdown('<div style="text-align:center;opacity:0.75;padding:1rem;">Created by HARI</div>', unsafe_allow_html=True)
+
